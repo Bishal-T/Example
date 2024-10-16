@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Roadmap (Clickable Milestones)</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .node {
+            fill: steelblue;
+            stroke: #fff;
+            stroke-width: 2px;
+            cursor: pointer;
+        }
+
+        .text {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            fill: #333;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 1.5px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 5px;
+            font-size: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Career Roadmap (Clickable Milestones)</h1>
+    <div class="tooltip" id="tooltip"></div>
+    <svg id="roadmap" width="1200" height="600"></svg>
+
+    <script>
+        // Generate career roadmap data with 30 milestones
+        const roadmapData = [];
+        for (let i = 1; i <= 30; i++) {
+            roadmapData.push({
+                milestone: `Career Milestone ${i}`,
+                level: i,
+                year: `${i} Year${i > 1 ? 's' : ''}`,
+                details: `This is the description of Career Milestone ${i}` // Additional information for each milestone
+            });
+        }
+
+        // Set up SVG dimensions
+        const svg = d3.select("#roadmap"),
+            width = +svg.attr("width"),
+            height = +svg.attr("height"),
+            margin = { top: 50, right: 50, bottom: 50, left: 50 },
+            chartWidth = width - margin.left - margin.right,
+            chartHeight = height - margin.top - margin.bottom;
+
+        // Set up group container
+        const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Set up scales for x and y
+        const x = d3.scaleLinear()
+            .domain([1, 15])  // Fit 15 milestones per row
+            .range([0, chartWidth]);
+
+        const y = d3.scaleLinear()
+            .domain([0, 2])  // 2 rows
+            .range([0, chartHeight]);
+
+        // Tooltip
+        const tooltip = d3.select("#tooltip");
+
+        // Split data into two rows (15 milestones per row)
+        const row1 = roadmapData.slice(0, 15);
+        const row2 = roadmapData.slice(15);
+
+        // Function to handle clicking on a node
+        function onClickMilestone(d) {
+            alert(`You clicked on ${d.milestone}: ${d.details}`);
+        }
+
+        // Function to render roadmap data
+        function renderRoadmap(data, rowIndex) {
+            // Draw the links (lines between nodes)
+            g.selectAll(`.link-row-${rowIndex}`)
+                .data(data.slice(1))
+                .enter()
+                .append("line")
+                .attr("class", `link-row-${rowIndex}`)
+                .attr("x1", (d, i) => x(i + 1))
+                .attr("y1", y(rowIndex))
+                .attr("x2", (d, i) => x(i + 2))
+                .attr("y2", y(rowIndex))
+                .attr("stroke", "#ccc")
+                .attr("stroke-width", 1.5);
+
+            // Draw the nodes (circles for milestones)
+            g.selectAll(`.node-row-${rowIndex}`)
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("class", `node-row-${rowIndex} node`)
+                .attr("r", 15)  // Smaller radius to fit more ynodes
+                .attr("cx", (d, i) => x(i + 1))
+                .attr("cy", y(rowIndex))
+                .attr("fill", "steelblue")
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 1.5)
+                .on("click", onClickMilestone)  // Attach click event
+                .on("mouseover", (event, d) => {
+                    tooltip.style("display", "block")
+                           .style("left", (event.pageX + 5) + "px")
+                           .style("top", (event.pageY - 28) + "px")
+                           .html(`<strong>${d.milestone}</strong><br/>${d.year}`);
+                })
+                .on("mouseout", () => {
+                    tooltip.style("display", "none");
+                });
+
+            // Add text labels for milestones
+            g.selectAll(`.text-row-${rowIndex}`)
+                .data(data)
+                .enter()
+                .append("text")
+                .attr("class", `text-row-${rowIndex}`)
+                .attr("x", (d, i) => x(i + 1))
+                .attr("y", y(rowIndex) - 25)  // Adjust the label position
+                .attr("text-anchor", "middle")
+                .attr("font-size", "10px")  // Smaller text to fit more labels
+                .text(d => d.milestone);
+
+            // Add text labels for years/experience
+            g.selectAll(`.year-row-${rowIndex}`)
+                .data(data)
+                .enter()
+                .append("text")
+                .attr("class", `text-row-${rowIndex}`)
+                .attr("x", (d, i) => x(i + 1))
+                .attr("y", y(rowIndex) + 30)
+                .attr("text-anchor", "middle")
+                .attr("font-size", "10px")  // Smaller text
+                .text(d => d.year);
+        }
+
+        // Render the roadmap for both rows
+        renderRoadmap(row1, 0);  // Row 1 (top)
+        renderRoadmap(row2, 1);  // Row 2 (bottom)
+
+        // Connect the last node of the first row with the first node of the second row
+        g.append("line")
+            .attr("class", "link-between-rows")
+            .attr("x1", x(15))  // Last node in row 1
+            .attr("y1", y(0))   // Row 1 Y position
+            .attr("x2", x(1))   // First node in row 2
+            .attr("y2", y(1))   // Row 2 Y position
+            .attr("stroke", "#ccc")
+            .attr("stroke-width", 1.5);
+
+    </script>
+
+</body>
+</html>
