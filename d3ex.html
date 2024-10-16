@@ -42,125 +42,147 @@
     <svg id="roadmap" width="1200" height="600"></svg>
 
     <script>
-        // Generate career roadmap data with 30 milestones
         const roadmapData = [];
-        for (let i = 1; i <= 30; i++) {
-            roadmapData.push({
-                milestone: `Career Milestone ${i}`,
-                level: i,
-                year: `${i} Year${i > 1 ? 's' : ''}`,
-                details: `This is the description of Career Milestone ${i}` // Additional information for each milestone
-            });
-        }
+    const numMilestones = 20; // Adjust this for different number of milestones
 
-        // Set up SVG dimensions
-        const svg = d3.select("#roadmap"),
-            width = +svg.attr("width"),
-            height = +svg.attr("height"),
-            margin = { top: 50, right: 50, bottom: 50, left: 50 },
-            chartWidth = width - margin.left - margin.right,
-            chartHeight = height - margin.top - margin.bottom;
+    for (let i = 1; i <= numMilestones; i++) {
+        roadmapData.push({
+            milestone: `Career Milestone ${i}`,
+            level: i,
+            year: `${i} Year${i > 1 ? 's' : ''}`,
+            details: `This is the description of Career Milestone ${i}`
+        });
+    }
 
-        // Set up group container
-        const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const svg = d3.select("#roadmap")
+        .attr("width", 1200)
+        .attr("height", 600)
+        .attr("viewBox", "0 0 1200 600")
+        .attr("preserveAspectRatio", "xMidYMid meet");
 
-        // Set up scales for x and y
-        const x = d3.scaleLinear()
-            .domain([1, 15])  // Fit 15 milestones per row
-            .range([0, chartWidth]);
+    const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+    let chartWidth = 1200 - margin.left - margin.right;
+    let chartHeight = 600 - margin.top - margin.bottom;
 
-        const y = d3.scaleLinear()
-            .domain([0, 2])  // 2 rows
-            .range([0, chartHeight]);
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Tooltip
-        const tooltip = d3.select("#tooltip");
+    const x = d3.scaleLinear().domain([1, roadmapData.length]).range([0, chartWidth]);
+    const y = d3.scaleLinear().domain([0, 1]).range([chartHeight / 3, 2 * chartHeight / 3]);
 
-        // Split data into two rows (15 milestones per row)
-        const row1 = roadmapData.slice(0, 15);
-        const row2 = roadmapData.slice(15);
 
-        // Function to handle clicking on a node
-        function onClickMilestone(d) {
-            alert(`You clicked on ${d.milestone}: ${d.details}`);
-        }
 
-        // Function to render roadmap data
-        function renderRoadmap(data, rowIndex) {
-            // Draw the links (lines between nodes)
-            g.selectAll(`.link-row-${rowIndex}`)
-                .data(data.slice(1))
-                .enter()
-                .append("line")
-                .attr("class", `link-row-${rowIndex}`)
-                .attr("x1", (d, i) => x(i + 1))
-                .attr("y1", y(rowIndex))
-                .attr("x2", (d, i) => x(i + 2))
-                .attr("y2", y(rowIndex))
-                .attr("stroke", "#ccc")
-                .attr("stroke-width", 1.5);
+    const tooltip = d3.select("#tooltip");
 
-            // Draw the nodes (circles for milestones)
-            g.selectAll(`.node-row-${rowIndex}`)
-                .data(data)
-                .enter()
-                .append("circle")
-                .attr("class", `node-row-${rowIndex} node`)
-                .attr("r", 15)  // Smaller radius to fit more ynodes
-                .attr("cx", (d, i) => x(i + 1))
-                .attr("cy", y(rowIndex))
-                .attr("fill", "steelblue")
-                .attr("stroke", "#fff")
-                .attr("stroke-width", 1.5)
-                .on("click", onClickMilestone)  // Attach click event
-                .on("mouseover", (event, d) => {
-                    tooltip.style("display", "block")
-                           .style("left", (event.pageX + 5) + "px")
-                           .style("top", (event.pageY - 28) + "px")
-                           .html(`<strong>${d.milestone}</strong><br/>${d.year}`);
-                })
-                .on("mouseout", () => {
-                    tooltip.style("display", "none");
-                });
+    function onClickMilestone(d) {
+        alert(`You clicked on ${d.milestone}: ${d.details}`);
+    }
 
-            // Add text labels for milestones
-            g.selectAll(`.text-row-${rowIndex}`)
-                .data(data)
-                .enter()
-                .append("text")
-                .attr("class", `text-row-${rowIndex}`)
-                .attr("x", (d, i) => x(i + 1))
-                .attr("y", y(rowIndex) - 25)  // Adjust the label position
-                .attr("text-anchor", "middle")
-                .attr("font-size", "10px")  // Smaller text to fit more labels
-                .text(d => d.milestone);
-
-            // Add text labels for years/experience
-            g.selectAll(`.year-row-${rowIndex}`)
-                .data(data)
-                .enter()
-                .append("text")
-                .attr("class", `text-row-${rowIndex}`)
-                .attr("x", (d, i) => x(i + 1))
-                .attr("y", y(rowIndex) + 30)
-                .attr("text-anchor", "middle")
-                .attr("font-size", "10px")  // Smaller text
-                .text(d => d.year);
-        }
-
-        // Render the roadmap for both rows
-        renderRoadmap(row1, 0);  // Row 1 (top)
-        renderRoadmap(row2, 1);  // Row 2 (bottom)
-
-        // Connect the last node of the first row with the first node of the second row
-        g.append("line")
-            .attr("class", "link-between-rows")
-            .attr("x1", x(15))  // Last node in row 1
-            .attr("y1", y(0))   // Row 1 Y position
-            .attr("x2", x(1))   // First node in row 2
-            .attr("y2", y(1))   // Row 2 Y position
+    function renderRoadmap(data, rowIndex) {
+        g.selectAll(`.link-row-${rowIndex}`)
+            .data(data.slice(1))
+            .enter()
+            .append("line")
+            .attr("class", `link-row-${rowIndex}`)
+            .attr("x1", (d, i) => x(i + 1))
+            .attr("y1", y(rowIndex))
+            .attr("x2", (d, i) => x(i + 2))
+            .attr("y2", y(rowIndex))
             .attr("stroke", "#ccc")
             .attr("stroke-width", 1.5);
+
+        const nodes = g.selectAll(`.node-row-${rowIndex}`)
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("class", `node-row-${rowIndex} node`)
+            .attr("r", 15)
+            .attr("cx", (d, i) => x(i + 1))
+            .attr("cy", y(rowIndex))
+            .attr("fill", "url(#node-gradient)") // Apply gradient
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 1.5)
+            .attr("filter", "url(#drop-shadow)") // Apply drop shadow
+            .on("click", onClickMilestone)
+            .on("mouseover", (event, d) => {
+                d3.select(event.target)
+                    .transition()
+                    .duration(200)
+                    .attr("r", 20) // Enlarge on hover
+                    .attr("fill", "orange"); // Change color on hover
+
+                tooltip.style("display", "block")
+                       .style("left", (event.pageX + 5) + "px")
+                       .style("top", (event.pageY - 28) + "px")
+                       .html(`<strong>${d.milestone}</strong><br/>${d.details}`);
+            })
+            .on("mouseout", (event) => {
+                d3.select(event.target)
+                    .transition()
+                    .duration(200)
+                    .attr("r", 15) // Revert size
+                    .attr("fill", "url(#node-gradient)"); // Revert color
+
+                tooltip.style("display", "none");
+            });
+
+        // Animate nodes when they appear
+        nodes.transition()
+            .duration(1000)
+            .attr("r", 15)
+            .ease(d3.easeBounceOut);
+
+        g.selectAll(`.text-row-${rowIndex}`)
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("class", `text-row-${rowIndex}`)
+            .attr("x", (d, i) => x(i + 1))
+            .attr("y", y(rowIndex) - 25)
+            .attr("text-anchor", "end")
+            .attr("font-size", "10px")
+            .attr("fill", "#333")
+            .text(d => d.milestone)
+            .style("opacity", 0) // Initially invisible
+            .transition() // Fade in text
+            .duration(1000)
+            .style("opacity", 1);
+
+        g.selectAll(`.year-row-${rowIndex}`)
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("class", `year-row-${rowIndex}`)
+            .attr("x", (d, i) => x(i + 1))
+            .attr("y", y(rowIndex) + 30)
+            .attr("text-anchor", "end")
+            .attr("font-size", "10px")
+            .attr("fill", "#333")
+            .text(d => d.year)
+            .style("opacity", 0) // Initially invisible
+            .transition() // Fade in text
+            .duration(1000)
+            .style("opacity", 1);
+    }
+
+    const row1 = roadmapData.slice(0, Math.ceil(roadmapData.length / 2));
+    const row2 = roadmapData.slice(Math.ceil(roadmapData.length / 2));
+
+    renderRoadmap(row1, 0);
+    renderRoadmap(row2, 1);
+
+    g.append("line")
+        .attr("class", "link-between-rows")
+        .attr("x1", x(row1.length))
+        .attr("y1", y(0))
+        .attr("x2", x(1))
+        .attr("y2", y(1))
+        .attr("stroke", "#ccc")
+        .attr("stroke-width", 1.5);
+
+    // Center the roadmap horizontally after rendering
+    const roadmapWidth = x(roadmapData.length);
+    const translateX = (1200 - roadmapWidth) / 2;
+    g.attr("transform", `translate(${translateX + margin.left}, ${margin.top})`);
 
     </script>
 
